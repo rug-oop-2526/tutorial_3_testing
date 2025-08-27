@@ -36,7 +36,7 @@ class Transform(ABC):
         :raises RuntimeError: if the transformer requires fitting and has not been fitted.
         :raises ValueError: if the input data has more than two dimensions.
         """
-        if self._requires_fit and not self._is_fitted:
+        if not self.is_fitted():
             raise RuntimeError(f'{self.__class__.__name__} must be fit() before calling.')
         
         if data.ndim > 2:
