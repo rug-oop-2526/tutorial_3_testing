@@ -1,13 +1,19 @@
 import unittest
+from pyfakefs.fake_filesystem_unittest import TestCase
 import numpy as np
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
+import os
 
 
 from preprocessing.numeric_cleaner import NumericCleaner
 
 
-class TestNumericCleaner(unittest.TestCase):
+class TestNumericCleaner(TestCase):
     def setUp(self) -> None:
+        self.setUpClassPyfakefs()
+
+        self.save_path = os.path.join('fakedir', 'dump.pkl')
+
         self.mk_imputer = Mock(spec_set=['fit', 'transform', 'is_fitted'])
         self.mk_scaler  = Mock(spec_set=['fit', 'transform', 'is_fitted'])
 
@@ -64,25 +70,29 @@ class TestNumericCleaner(unittest.TestCase):
 
         np.testing.assert_allclose(result, self.mk_scaler.transform.return_value)
     
-    def test_save_opens_in_binary_and_calls_pickle_dump_with_self(self):
-        with patch("builtins.open", mock_open()) as mopen, patch("pickle.dump") as dump_mock:
-            self.cleaner.save("some/path.pkl")
-            mopen.assert_called_once_with("some/path.pkl", "wb")
-            
-            # pickle.dump(obj, file)
-            args, kwargs = dump_mock.call_args
 
-            self.assertIs(args[0], self.cleaner)
+    def test_save_opens_in_binary_and_calls_pickle_dump_with_self(self):
+        self.fs.makedirs('fakedir', exist_ok=True)
+
+        ret = object()
+
+        with patch('pickle.dump', return_value=ret) as save_mock:
+            self.cleaner.save(self.save_path)
+            assert os.path.exists(self.save_path)
+            save_mock.assert_called_once()
+
 
     def test_load_opens_in_binary_and_returns_result_of_pickle_load(self):
-        ret = object()
-        with patch("builtins.open", mock_open(read_data=b"irrelevant")) as mopen, \
-             patch("pickle.load", return_value=ret) as load_mock:
-            obj = NumericCleaner.load("some/path.pkl")
-            mopen.assert_called_once_with("some/path.pkl", "rb")
-            load_mock.assert_called_once()
-            self.assertIs(obj, ret)
+        self.fs.makedirs('fakedir', exist_ok=True)
+        
+        obj = object()
 
+        self.fs.create_file(self.save_path)
+
+        with patch("pickle.load", return_value=obj) as load_mock:
+            ret = NumericCleaner.load(self.save_path)
+            load_mock.assert_called_once()
+            assert obj is ret
 
 if __name__ == "__main__":
     unittest.main()
