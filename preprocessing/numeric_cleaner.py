@@ -3,7 +3,7 @@ import pickle
 
 from preprocessing.mean_inputer import MeanImputer
 from preprocessing.min_max_scaler import MinMaxScaler
-from preprocessing.transform import Transform
+from preprocessing.preprocess import Preprocess
 
 class NumericCleaner:
     """
@@ -14,10 +14,10 @@ class NumericCleaner:
     are fitted sequentially on the training data and then applied in the same order
     to new data.
     """
-    _imputer: Transform
-    _scaler:  Transform
+    _imputer: Preprocess
+    _scaler:  Preprocess
 
-    def __init__(self, imputer: Transform, scaler: Transform) -> None:
+    def __init__(self, imputer: Preprocess, scaler: Preprocess) -> None:
         self._imputer = imputer
         self._scaler  = scaler
 

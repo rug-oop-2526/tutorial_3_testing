@@ -1,10 +1,10 @@
 import numpy as np
 
 
-from preprocessing.transform import Transform
+from preprocessing.preprocess import Preprocess
 
     
-class MeanImputer(Transform):
+class MeanImputer(Preprocess):
     """
     A transformer that imputes missing values (NaNs) using the mean of each feature.
 
@@ -31,7 +31,7 @@ class MeanImputer(Transform):
         self._means = None
         self._fill_value = fill_value
 
-    def fit(self, data: np.ndarray) -> 'MeanImputer':
+    def fit(self, X: np.ndarray) -> 'MeanImputer':
         """
         Calculates the mean of each feature from the input data.
 
@@ -39,9 +39,9 @@ class MeanImputer(Transform):
         :returns: The fitted imputer instance.
         :raises ValueError: if the input data does not have two dimensions.
         """
-        super().fit(data)
+        super().fit(X)
 
-        means = np.nanmean(data, axis=0)
+        means = np.nanmean(X, axis=0)
 
         if self._fill_value is None:
             self._means = means
@@ -52,7 +52,7 @@ class MeanImputer(Transform):
 
         return self
 
-    def _apply_transform(self, data: np.ndarray) -> np.ndarray:
+    def _apply_transform(self, X: np.ndarray) -> np.ndarray:
         """
         Replaces missing values (NaNs) in the data with the fitted feature means.
 
@@ -66,7 +66,7 @@ class MeanImputer(Transform):
         """
         assert self._means is not None
 
-        if data.shape[1] != self._means.shape[0]:
-            self._raise_invalid_num_features(self._means[0], data.shape[1])
+        if X.shape[1] != self._means.shape[0]:
+            self._raise_invalid_num_features(self._means[0], X.shape[1])
         
-        return np.where(np.isnan(data), self._means, data)
+        return np.where(np.isnan(X), self._means, X)

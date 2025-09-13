@@ -1,10 +1,10 @@
 import numpy as np
 
 
-from preprocessing.transform import Transform
+from preprocessing.preprocess import Preprocess
 
 
-class MinMaxScaler(Transform):
+class MinMaxScaler(Preprocess):
     """
     A transformer that scales features to a given range, typically [0, 1].
 
@@ -33,7 +33,7 @@ class MinMaxScaler(Transform):
 
         self._fill_value = fill_value
 
-    def fit(self, data: np.ndarray) -> 'MinMaxScaler':
+    def fit(self, X: np.ndarray) -> 'MinMaxScaler':
         """
         Calculates the per-feature minimum and range for scaling.
 
@@ -45,16 +45,16 @@ class MinMaxScaler(Transform):
         :returns: The fitted scaler instance.
         :raises ValueError: if the input data does not have two dimensions.
         """
-        super().fit(data)
+        super().fit(X)
         
-        self._min_vals = np.min(data, axis=0)
-        self._rng_vals = np.max(data, axis=0) - self._min_vals
+        self._min_vals = np.min(X, axis=0)
+        self._rng_vals = np.max(X, axis=0) - self._min_vals
         
         self._is_fitted = True
 
         return self
 
-    def _apply_transform(self, data: np.ndarray) -> np.ndarray:
+    def _apply_transform(self, X: np.ndarray) -> np.ndarray:
         """
         Applies the fitted Min-Max scaling to a NumPy array.
 
@@ -70,12 +70,12 @@ class MinMaxScaler(Transform):
         assert self._min_vals is not None
         assert self._rng_vals is not None
 
-        if data.shape[1] != self._min_vals.shape[0]:
-            self._raise_invalid_num_features(self._min_vals.shape[0], data.shape[1])
+        if X.shape[1] != self._min_vals.shape[0]:
+            self._raise_invalid_num_features(self._min_vals.shape[0], X.shape[1])
         
-        out = np.full_like(data, fill_value=self._fill_value, dtype=float)
+        out = np.full_like(X, fill_value=self._fill_value, dtype=float)
 
-        np.divide(data - self._min_vals, self._rng_vals, where=self._rng_vals != 0, out=out)
+        np.divide(X - self._min_vals, self._rng_vals, where=self._rng_vals != 0, out=out)
 
         return out
     

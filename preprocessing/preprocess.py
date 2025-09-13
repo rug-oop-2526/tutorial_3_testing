@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-class Transform(ABC):
+class Preprocess(ABC):
     _requires_fit: bool = False
     _is_fitted: bool = False
 
-    def fit(self, data: np.ndarray) -> 'Transform':
+    def fit(self, X: np.ndarray) -> 'Preprocess':
         """
         Validates the input data and prepares the transform.
 
@@ -17,12 +17,12 @@ class Transform(ABC):
         :returns: self.
         :raises ValueError: if the input data is not a 2D NumPy array.
         """
-        if data.ndim != 2:
+        if X.ndim != 2:
             raise ValueError('fit expects a 2D array of shape (n_samples, n_features).')
         
         return self
 
-    def transform(self, data: np.ndarray) -> np.ndarray:
+    def transform(self, X: np.ndarray) -> np.ndarray:
         """
         Transforms the input data using the fitted transformation.
 
@@ -39,16 +39,16 @@ class Transform(ABC):
         if not self.is_fitted():
             raise RuntimeError(f'{self.__class__.__name__} must be fit() before calling.')
         
-        if data.ndim > 2:
+        if X.ndim > 2:
             raise ValueError("__call__ expects 1D or 2D array input.")
         
-        if data.ndim == 1:
-            out = self._apply_transform(data[np.newaxis, :])
+        if X.ndim == 1:
+            out = self._apply_transform(X[np.newaxis, :])
             return out[0]
         
-        return self._apply_transform(data)
+        return self._apply_transform(X)
     
-    def __call__(self, data: np.ndarray) -> np.ndarray:
+    def __call__(self, X: np.ndarray) -> np.ndarray:
         """
         Applies fit and transform.
 
@@ -60,9 +60,9 @@ class Transform(ABC):
         :returns: The transformed array.
         """
         if self._requires_fit:
-            self.fit(data)
+            self.fit(X)
         
-        return self.transform(data)
+        return self.transform(X)
     
     def is_fitted(self) -> bool:
         return not self._requires_fit or self._is_fitted
@@ -82,7 +82,7 @@ class Transform(ABC):
         raise ValueError(f'invalid number of features, expected {expected} but received {received}')
     
     @abstractmethod
-    def _apply_transform(self, data: np.ndarray) -> np.ndarray:
+    def _apply_transform(self, X: np.ndarray) -> np.ndarray:
         """Implement the 2D transform (n_samples, n_features)."""
         ...
 
