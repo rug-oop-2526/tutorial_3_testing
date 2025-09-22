@@ -3,12 +3,29 @@ import unittest
 import tempfile
 import numpy as np
 
+from pyfakefs.fake_filesystem_unittest import TestCase as FakefsTestCase
+
+
 from preprocessing.numeric_cleaner import NumericCleaner
 from preprocessing.mean_inputer import MeanImputer
 from preprocessing.min_max_scaler import MinMaxScaler
 
 
-class TestNumericCleanerIntegration(unittest.TestCase):
+class TestNumericCleanerIntegration(FakefsTestCase):
+    def setUp(self) -> None:
+        self.setUpClassPyfakefs()
+
+        self.save_dir = 'dumps'
+        self.save_file = os.path.join(self.save_dir, 'dump.pkl')
+
+        # example of mapping a real directory into fake FS
+        # self.fs.add_real_directory('/images/', target_path='/test_images')
+
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+        return super().setUp()
+
     def test_expected_scaled_values(self):
         """
         Verifies that for a known input, the cleaner produces exactly the expected scaled values.
@@ -129,23 +146,17 @@ class TestNumericCleanerIntegration(unittest.TestCase):
         with self.assertRaises(ValueError):
             cleaner.transform(X_bad)
 
-    def test_pickle_round_trip_preserves_behavior(self):
-        X = np.array([
-            [1.0, np.nan, 10.0],
-            [3.0, 5.0,    20.0],
-            [7.0, 9.0,    30.0],
-        ], dtype=float)
+    def test_save_creates_file(self) -> None:
+        assert not os.path.exists(self.save_file)
 
-        cleaner = NumericCleaner.from_defaults(fill_value=0.0).fit(X)
-        Xt = cleaner.transform(X)
+        cleaner = NumericCleaner.from_defaults()
 
-        with tempfile.TemporaryDirectory() as d:
-            path = os.path.join(d, "cleaner.pkl")
-            cleaner.save(path)
-            reloaded = NumericCleaner.load(path)
-            Xt2 = reloaded.transform(X)
+        cleaner.fit(np.array([[0, 1, 2]]))
 
-        np.testing.assert_allclose(Xt, Xt2, rtol=1e-7, atol=1e-9)
+        cleaner.save(self.save_file)
+
+        assert os.path.exists(self.save_file)
+        assert os.path.getsize(self.save_file) > 0
 
 
 if __name__ == "__main__":

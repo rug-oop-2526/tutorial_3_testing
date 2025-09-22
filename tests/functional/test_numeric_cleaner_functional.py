@@ -32,7 +32,7 @@ class TestNumericCleanerFunctional(unittest.TestCase):
         Xt_before = cleaner.transform(X)
         np.testing.assert_allclose(Xt_before, expected, rtol=1e-9, atol=1e-9)
 
-        # Save and reload
+        # Example of NOT using pyfake fs (more verbose and complex)
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "cleaner.pkl")
             cleaner.save(path)
