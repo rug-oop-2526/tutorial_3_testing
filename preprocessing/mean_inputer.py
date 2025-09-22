@@ -69,4 +69,6 @@ class MeanImputer(Preprocess):
         if X.shape[1] != self._means.shape[0]:
             self._raise_invalid_num_features(self._means[0], X.shape[1])
         
-        return np.where(np.isnan(X), self._means, X)
+        y = np.where(np.isnan(X), self._means, X)
+        
+        return y

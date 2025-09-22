@@ -1,7 +1,7 @@
 import unittest
 from pyfakefs.fake_filesystem_unittest import TestCase
 import numpy as np
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 import os
 
 
@@ -63,10 +63,15 @@ class TestNumericCleaner(TestCase):
         data = np.array([[np.nan, 2.0], [3.0, np.nan]])
         result = self.cleaner(data)
 
-        self.mk_imputer.fit.assert_called_once_with(data)
-        self.mk_imputer.transform.assert_called_with(data)
-        self.mk_scaler.fit.assert_called_once_with(self.mk_imputer.transform.return_value)
-        self.mk_scaler.transform.assert_called_with(self.mk_imputer.transform.return_value)
+        self.mk_imputer.assert_has_calls([
+            call.fit(data), call.transform(data)
+        ])
+
+        X_trans = self.mk_imputer.transform.return_value
+
+        self.mk_scaler.assert_has_calls([
+            call.fit(X_trans), call.transform(X_trans)
+        ])
 
         np.testing.assert_allclose(result, self.mk_scaler.transform.return_value)
     
